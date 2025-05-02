@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>BlueBird 2</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(to top, #cceeff, #ffffff);
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+      touch-action: none;
+    }
+    #startText {
+      position: absolute;
+      top: 40%;
+      width: 100%;
+      text-align: center;
+      font-size: 2em;
+      color: #333;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px white;
+    }
+  </style>
+</head>
+<body>
+  <div id="startText">Tap or Press Space to Start</div>
+  <canvas id="gameCanvas"></canvas>
+
+  <!-- Audio -->
+  <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2023/03/01/audio_9a29bda64c.mp3" preload="auto" loop></audio>
+  <audio id="sound-jump" src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3" preload="auto"></audio>
+  <audio id="sound-score" src="https://freesound.org/data/previews/341/341695_6260912-lq.mp3" preload="auto"></audio>
+  <audio id="sound-hit" src="https://freesound.org/data/previews/198/198841_285997-lq.mp3" preload="auto"></audio>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const birdImg = new Image();
+    birdImg.src = "https://iili.io/3Mqk8f1.png";
+
+    const bird = {
+      x: canvas.width * 0.2,
+      y: canvas.height / 2,
+      width: 50,
+      height: 40,
+      velocity: 0
+    };
+
+    const gravity = 0.6;
+    const jump = -10;
+    const pipeGap = 320;
+    const pipeWidth = 100;
+    let pipes = [];
+    let score = 0;
+    let gameRunning = false;
+
+    const sounds = {
+      jump: document.getElementById("sound-jump"),
+      score: document.getElementById("sound-score"),
+      hit: document.getElementById("sound-hit"),
+      bg: document.getElementById("bgMusic")
+    };
+    sounds.bg.volume = 0.25;
+    sounds.bg.playbackRate = 0.5;
+    sounds.jump.volume = 0.25;
+    sounds.score.volume = 0.25;
+    sounds.hit.volume = 0.25;
+
+    function restartGame() {
+      pipes = [];
+      score = 0;
+      bird.y = canvas.height / 2;
+      bird.velocity = 0;
+      gameRunning = true;
+      sounds.bg.play().catch(() => {});
+    }
+
+    function createPipe() {
+      const topHeight = Math.random() * (canvas.height - pipeGap - 200) + 50;
+      pipes.push({ x: canvas.width, top: topHeight, passed: false, color: randomColor() });
+    }
+
+    function randomColor() {
+      const colors = ['#8B4513', '#A0522D', '#CD853F', '#D2691E', '#A52A2A'];
+      return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = "#fff";
+      const count = 6;
+      for (let i = 0; i < count; i++) {
+        const x = (Date.now() / 20 + i * 300) % (canvas.width + 200) - 200;
+        const y = 80 + Math.sin(i + Date.now() / 500) * 30;
+        ctx.beginPath();
+        ctx.arc(x, y, 30, 0, Math.PI * 2);
+        ctx.arc(x + 30, y + 10, 40, 0, Math.PI * 2);
+        ctx.arc(x + 80, y, 30, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawBird() {
+      ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height);
+    }
+
+    function drawPipes() {
+      pipes.forEach(pipe => {
+        ctx.fillStyle = pipe.color;
+
+        // Top pipe
+        ctx.beginPath();
+        ctx.moveTo(pipe.x, 0);
+        ctx.lineTo(pipe.x + pipeWidth, 0);
+        ctx.lineTo(pipe.x + pipeWidth * 0.8, pipe.top);
+        ctx.lineTo(pipe.x + pipeWidth * 0.2, pipe.top);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bottom pipe
+        ctx.beginPath();
+        ctx.moveTo(pipe.x + pipeWidth * 0.2, pipe.top + pipeGap);
+        ctx.lineTo(pipe.x + pipeWidth * 0.8, pipe.top + pipeGap);
+        ctx.lineTo(pipe.x + pipeWidth, canvas.height);
+        ctx.lineTo(pipe.x, canvas.height);
+        ctx.closePath();
+        ctx.fill();
+
+        // Rings
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top - 10, pipeWidth * 0.6, 10);
+        ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top + pipeGap, pipeWidth * 0.6, 10);
+      });
+    }
+
+    function update() {
+      if (!gameRunning) return;
+      bird.velocity += gravity;
+      bird.y += bird.velocity;
+
+      if (bird.y + bird.height > canvas.height || bird.y < 0) {
+        sounds.hit.currentTime = 0;
+        sounds.hit.play();
+        gameRunning = false;
+        sounds.bg.pause();
+      }
+
+      pipes.forEach(pipe => {
+        pipe.x -= 4;
+        if (!pipe.passed && bird.x > pipe.x + pipeWidth) {
+          pipe.passed = true;
+          score++;
+          sounds.score.currentTime = 0;
+          sounds.score.play();
+        }
+
+        if (
+          bird.x < pipe.x + pipeWidth &&
+          bird.x + bird.width > pipe.x &&
+          (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap)
+        ) {
+          sounds.hit.currentTime = 0;
+          sounds.hit.play();
+          gameRunning = false;
+          sounds.bg.pause();
+        }
+      });
+
+      if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) {
+        createPipe();
+      }
+
+      pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0);
+    }
+
+    function drawScore() {
+      ctx.fillStyle = '#000';
+      ctx.font = '30px Arial';
+      ctx.fillText(`Score: ${score}`, 20, 40);
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawBackground();
+      update();
+      drawPipes();
+      drawBird();
+      drawScore();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function startGame() {
+      if (!gameRunning) {
+        restartGame();
+        document.getElementById('startText').style.display = 'none';
+      }
+      bird.velocity = jump;
+      sounds.jump.currentTime = 0;
+      sounds.jump.play();
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') startGame();
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      startGame();
+    });
+
+    birdImg.onload = () => {
+      gameLoop();
+    };
+  </script>
+</body>
+</html>
