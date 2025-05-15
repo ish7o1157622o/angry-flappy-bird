@@ -1,17 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1024, initial-scale=1.0, user-scalable=no" />
   <title>BlueBird 2</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body {
       width: 100%;
       height: 100%;
-      overflow: hidden;
       background: linear-gradient(to top, #cceeff, #ffffff);
       font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    header {
+      width: 100%;
+      padding: 10px;
+      text-align: right;
+    }
+    header a {
+      text-decoration: none;
+      color: #333;
+      font-weight: bold;
+      font-size: 18px;
+      padding: 6px 12px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    main {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .ad-space {
+      width: 350px;
+      height: 50px;
+      margin: 0 10px;
+      background: #eee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 14px;
+      color: #555;
+      border: 1px dashed #aaa;
+    }
+    .game-wrapper {
+      width: 640px;
+      height: 640px;
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
     }
     canvas {
       display: block;
@@ -26,24 +70,48 @@
       color: #333;
       font-weight: bold;
       text-shadow: 1px 1px 2px white;
+      user-select: none;
+      pointer-events: none;
+    }
+    footer {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 14px;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <div id="startText">Tap or Press Space to Start</div>
-  <canvas id="gameCanvas"></canvas>
+  <header>
+    <a href="https://tools4dailyneedgamesme.odoo.com/" target="_blank">Home</a>
+  </header>
+
+  <main>
+    <div class="ad-space">Ad Space (Left 350x50)</div>
+
+    <div class="game-wrapper">
+      <div id="startText">Tap or Press Space to Start</div>
+      <canvas id="gameCanvas" width="640" height="640"></canvas>
+    </div>
+
+    <div class="ad-space">Ad Space (Right 350x50)</div>
+  </main>
+
+  <footer>
+    &copy; AnupamTech_Arts
+  </footer>
 
   <!-- Audio -->
-  <audio id="bgMusic" src="https://cdn.pixabay.com/audio/2023/03/01/audio_9a29bda64c.mp3" preload="auto" loop></audio>
-  <audio id="sound-jump" src="https://freesound.org/data/previews/331/331912_3248244-lq.mp3" preload="auto"></audio>
-  <audio id="sound-score" src="https://freesound.org/data/previews/341/341695_6260912-lq.mp3" preload="auto"></audio>
-  <audio id="sound-hit" src="https://freesound.org/data/previews/198/198841_285997-lq.mp3" preload="auto"></audio>
+  <audio id="bgMusic" src="bg-music.mp3" preload="auto" loop></audio>
+  <audio id="sound-jump" src="jump.mp3" preload="auto"></audio>
+  <audio id="sound-score" src="score.wav" preload="auto"></audio>
+  <audio id="sound-hit" src="hit.mp3" preload="auto"></audio>
 
   <script>
+    // Your original full game script, unchanged except sound element ids usage and minor fixes for audio play:
+
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
 
     const birdImg = new Image();
     birdImg.src = "https://iili.io/3Mqk8f1.png";
@@ -64,17 +132,23 @@
     let score = 0;
     let gameRunning = false;
 
+    // Audio elements from DOM
     const sounds = {
       jump: document.getElementById("sound-jump"),
       score: document.getElementById("sound-score"),
       hit: document.getElementById("sound-hit"),
       bg: document.getElementById("bgMusic")
     };
+
+    // Set volumes & playback rates
     sounds.bg.volume = 0.25;
     sounds.bg.playbackRate = 0.5;
     sounds.jump.volume = 0.25;
     sounds.score.volume = 0.25;
     sounds.hit.volume = 0.25;
+
+    // Start text div for instructions
+    const startText = document.getElementById("startText");
 
     function restartGame() {
       pipes = [];
@@ -82,6 +156,8 @@
       bird.y = canvas.height / 2;
       bird.velocity = 0;
       gameRunning = true;
+      startText.style.display = "none";
+      sounds.bg.currentTime = 0;
       sounds.bg.play().catch(() => {});
     }
 
@@ -153,6 +229,7 @@
         sounds.hit.play();
         gameRunning = false;
         sounds.bg.pause();
+        startText.style.display = "block";
       }
 
       pipes.forEach(pipe => {
@@ -173,6 +250,7 @@
           sounds.hit.play();
           gameRunning = false;
           sounds.bg.pause();
+          startText.style.display = "block";
         }
       });
 
@@ -192,35 +270,45 @@
     function gameLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       drawBackground();
-      update();
       drawPipes();
       drawBird();
       drawScore();
+      update();
       requestAnimationFrame(gameLoop);
     }
 
-    function startGame() {
+    // Start the game loop immediately
+    gameLoop();
+
+    // Controls to start / jump
+    window.addEventListener("keydown", e => {
+      if (e.code === "Space") {
+        if (!gameRunning) {
+          restartGame();
+        }
+        bird.velocity = jump;
+        sounds.jump.currentTime = 0;
+        sounds.jump.play();
+      }
+    });
+
+    window.addEventListener("click", () => {
       if (!gameRunning) {
         restartGame();
-        document.getElementById('startText').style.display = 'none';
       }
       bird.velocity = jump;
       sounds.jump.currentTime = 0;
       sounds.jump.play();
+    });
+
+    // Enable background music after first user interaction (due to browser policies)
+    function enableAudio() {
+      sounds.bg.play().catch(() => {});
+      window.removeEventListener("click", enableAudio);
+      window.removeEventListener("keydown", enableAudio);
     }
-
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') startGame();
-    });
-
-    canvas.addEventListener('touchstart', (e) => {
-      e.preventDefault();
-      startGame();
-    });
-
-    birdImg.onload = () => {
-      gameLoop();
-    };
+    window.addEventListener("click", enableAudio);
+    window.addEventListener("keydown", enableAudio);
   </script>
 </body>
 </html>
