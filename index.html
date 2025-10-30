@@ -1,1 +1,108 @@
-<!DOCTYPE html> <html lang="en"> <head> <meta charset="UTF-8" /> <meta name="viewport" content="width=1024, initial-scale=1.0, user-scalable=no" /> <title> * margin: 0; body: 100%; font-family: flex-direction; centre; } header { width: 100%; padding: 10px; text-align: right; } header a { text-decoration: none; color: #333; font-weight: bold; font-size: 18px; padding: 6px 12px; background: #fff; border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.2); } main { display: flex; justify-content: center; align-items: center; margin-top: 10px; } .ad-space { width: 350px; height: 50px; margin: 0 10px; background: #eee; display:flex; justify-content: center; align-items: center; font-size: 14px; color: #555; border: 1px dashed #aaa; } .game-wrapper { width: 640px; height: 640px; position: relative; overflow: hidden; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.3); } canvas { display: block; touch-action: none; } #startText { position: absolute; top: 40%; width: 100%; text-align: center; font-size: 2em; color: #333; font-weight: bold; text-shadow: 1px 1px 2px white; user-select: none; pointer-events: none; } footer { margin-top: 20px; padding: 10px; font-size: 14px; color: #666; } </style> </head> <body> <header> <a href="https://tools4dailyneedgamesme.odoo.com/" target="_blank">Home</a> </header> <main> <div class="ad-space">Ad Space (Left 350x50)</div> <div class="game-wrapper"> <div id="startText">Tap or Press Space to Start</div> <canvas id="gameCanvas" width="640" height="640"></canvas> </div> <div class="ad-space">Ad Space (Right 350x50)</div> </main> <footer> © AnupamTech_Arts </footer> <!-- Audio --> <audio id="bgMusic" src="782060__looplicator__192-bpm-industrial-drum-loop-12023-wav" preload="auto" loop></audio> <audio id="sound-jump" src="jump.mp3" preload="auto"></audio> <audio id="sound-score" src="score.wav" preload="auto"></audio> <audio id="sound-hit" src="hit.mp3" preload="auto"></audio> <script> // Your original full game script, unchanged except sound element ids usage and minor fixes for audio play: const canvas = document.getElementById("2d"); const birdImg = "https://iili.io/3Mqk8f1"; const bird = canvas.height / 2, height: 40, velocity: 0 }; const gravity = 0.6; const jump = -10; const pipeGap = 320; const pipeWidth = 100; let pipes = []; let score = 0; let gameRunning = false; // Audio elements from DOM const sounds = { jump: document.getElementById("sound-jump"), score: document.getElementById("sound-score"), hit: document.getElementById("sound-hit"), bg: document.getElementById("bgMusic") }; // Set volumes & playback rates sounds.bg.volume = 0.25; sounds.bg.playbackRate = 0.5; sounds.jump.volume = 0.25; sounds.score.volume = 0.25; sounds.hit.volume = 0.25; // Start text div for instructions const startText = document.getElementById("startText"); function restartGame() { pipes = []; score=0; bird.y = canvas.height / 2; bird.velocity = 0; gameRunning = true; startText.style.display = "none"; sounds.bg.currentTime = 0; sounds.bg.play().catch(() => {}); } function createPipe() { const topHeight = Math.random() * (canvas.height - pipeGap - 200) + 50; pipes.push({ x: canvas.width, top: topHeight, passed: false, color: randomColor() }); } function randomColor() { const colors = ['#8B4513', '#A0522D', '#CD853F', '#D2691E', '#A52A2A']; return colors[Math.floor(Math.random() * colors.length)]; } function drawBackground() { ctx.fillStyle = "#fff"; const count = 6; for (let i = 0; i < count; i++) { const x = (Date.now() / 20 + i * 300) % (canvas.width + 200) - 200; const y = 80 + Math.sin(i + Date.now() / 500) * 30; ctx.beginPath(); ctx.arc(x, y, 30, 0, Math.PI * 2); ctx.arc(x + 30, y + 10, 40, 0, Math.PI * 2); ctx.arc(x + 80, y, 30, 0, Math.PI * 2); ctx.fill(); } } function drawBird() { ctx.drawImage(birdImg, bird.x, bird.y, bird.width, bird.height); } function drawPipes() { pipes.forEach(pipe => { ctx.fillStyle = pipe.color; // Top pipe ctx.beginPath(); ctx.moveTo(pipe.x, 0); ctx.lineTo(pipe.x + pipeWidth, 0); ctx.lineTo(pipe.x + pipeWidth * 0.8, pipe.top); ctx.lineTo(pipe.x + pipeWidth * 0.2, pipe.top); ctx.closePath(); ctx.fill(); ctx.moveTo(pipe.x + pipeGap); ctx.lineTo(pipe.x, canvas.height); ctx.closePath(); ctx.fill(); //Rings ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top - 10, pipeWidth * 0.6, 10); ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top + pipeGap, pipeWidth * 0.6, 10); , } function update() { if (!gameRunning) return; bird.velocity += gravity; bird.y += bird.velocity; if (bird.y + bird.height > canvas.height || bird.y < 0) { sounds.hit.currentTime = 0; sounds.hit.play(); gameRunning = false; sounds.bg.pause(); startText.style.display = "block"; } pipes.forEach(pipe => { pipe.x -= 4; if (!pipe.passed && bird.x > pipe.x + pipeWidth) { pipe.passed = true; score++; sounds.score.currentTime = 0; sounds.score.play(); } if ( bird.x < pipe.x + pipeWidth && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap) { sounds.hit.play(); sounds.bg.display = "block"; if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) { createPipe(); } pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0); } function drawScore() { ctx.fillStyle = '#000'; ctx.font = '30px Arial'; ctx.fillText(top + pipeGap); ctx.lineTo(pipe.x + pipeWidth, canvas.height); ctx.lineTo(pipe.x, canvas.height); ctx.closePath(); ctx.fill(); //Rings ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top - 10, pipeWidth * 0.6, 10); ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top + pipeGap, pipeWidth * 0.6, 10); , } function update() { if (!gameRunning) return; bird.velocity += gravity; bird.y += bird.velocity; if (bird.y + bird.height > canvas.height || bird.y < 0) { sounds.hit.currentTime = 0; sounds.hit.play(); gameRunning = false; sounds.bg.pause(); startText.style.display = "block"; } pipes.forEach(pipe => { pipe.x -= 4; if (!pipe.passed && bird.x > pipe.x + pipeWidth) { pipe.passed = true; score++; sounds.score.currentTime = 0; sounds.score.play(); } if ( bird.x < pipe.x + pipeWidth && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap(); if (pipes.length == 0).x < canvas.width(); '#000'; ctx.font = '30px Arial'; ctx.fillText(top + pipeGap); ctx.lineTo(pipe.x + pipeWidth, canvas.height); ctx.lineTo(pipe.x, canvas.height); ctx.closePath(); ctx.fill(); //Rings ctx.strokeStyle = '#000'; ctx.lineWidth = 4; ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top - 10, pipeWidth * 0.6, 10); ctx.strokeRect(pipe.x + pipeWidth * 0.2, pipe.top + pipeGap, pipeWidth * 0.6, 10); , } function update() { if (!gameRunning) return; bird.velocity += gravity; bird.y += bird.velocity; if (bird.y + bird.height > canvas.height || bird.y < 0) { sounds.hit.currentTime = 0; sounds.hit.play(); gameRunning = false; sounds.bg.pause(); startText.style.display = "block"; } pipes.forEach(pipe => { pipe.x -= 4; if (!pipe.passed && bird.x > pipe.x + pipeWidth) { pipe.passed = true; score++; sounds.score.currentTime = 0; sounds.score.play(); } if ( bird.x < pipe.x + pipeWidth && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap) { sounds.hit.play(); sounds.bg.display = "block"; , pipes[pipes.length - 1].x < canvas.width - 300) { createPipe(); } pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0); } function drawScore() { ctx.fillStyle = '#000'; ctx.font = '30px Arial'; ctx.fillText(x + pipeWidth && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap) ) { sounds.hit.currentTime = 0; sounds.hit.play(); gameRunning = false; sounds.bg.pause(); startText.style.display = "block"; , if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) { createPipe(); } pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0); } function drawScore() { ctx.fillStyle = '#000'; ctx.font = '30px Arial'; ctx.fillText(x + pipeWidth && bird.x + bird.width > pipe.x && (bird.y < pipe.top || bird.y + bird.height > pipe.top + pipeGap) ) { sounds.hit.currentTime = 0; sounds.hit.play(); gameRunning = false; sounds.bg.pause(); startText.style.display = "block"; , if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) { createPipe(); } pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0); } function drawScore() { ctx.fillStyle = '#000'; ctx.font = '30px Arial'; ctx.fillText(Score: ${score}, 20, 40); } function gameLoop() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawBackground(); drawPipes(); drawBird(); drawScore(); update(); requestAnimationFrame(gameLoop); } // Start the game loop immediately gameLoop(); // Controls to start / jump window.addEventListener("keydown", e => { if (e.code === "Space") { if (!gameRunning) { restartGame(); } bird.velocity = jump; sounds.jump.currentTime = 0; sounds.jump.play(); } }); window.addEventListener("click", () => { if (!gameRunning) { restartGame(); } bird.velocity = jump; sounds.jump.currentTime = 0; sounds.jump.play(); }); // Enable background music after first user interaction (due to browser policies) function enableAudio() { sounds.bg.play().catch(() => {}); window.removeEventListener("click", enableAudio); window.removeEventListener("keydown", enableAudio); } window.addEventListener("click", enableAudio); window.addEventListener("keydown", enableAudio); </script> </body> <script type="text/javascript"> atOptions = { 'key' : 'c91750109f3bb52677ddd12609310aa2', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} }; </script> </html>currentTime = 0; sounds.hit.play(); gameRunning = false; sounds.bg.pause(); startText.style.display = "block"; , if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) { createPipe(); } pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0); } function drawScore() { ctx.fillStyle = '#000'; ctx.font = '30px Arial'; ctx.fillText(Score: ${score}, 20, 40); } function gameLoop() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawBackground(); drawPipes(); drawBird(); drawScore(); update(); requestAnimationFrame(gameLoop); } // Start the game loop immediately gameLoop(); // Controls to start / jump window.addEventListener("keydown", e => { if (e.code === "Space") { if (!gameRunning) { restartGame(); } bird.velocity = jump; sounds.jump.currentTime = 0; sounds.jump.play(); } }); window.addEventListener("click", () => { if (!gameRunning) { restartGame(); } bird.velocity = jump; sounds.jump.currentTime = 0; sounds.jump.play(); }); // Enable background music after first user interaction (due to browser policies) function enableAudio() { sounds.bg.play().catch(() => {}); window.removeEventListener("click", enableAudio); window.removeEventListener("keydown", enableAudio); } window.addEventListener("click", enableAudio); window.addEventListener("keydown", enableAudio); </script> </body> <script type="text/javascript"> atOptions = { 'key' : 'c91750109f3bb52677ddd12609310aa2', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} }; </script> </html>currentTime = 0; sounds.hit.play(); gameRunning = false; sounds.bg.pause(); startText.style.display = "block"; , if (pipes.length === 0 || pipes[pipes.length - 1].x < canvas.width - 300) { createPipe(); } pipes = pipes.filter(pipe => pipe.x + pipeWidth > 0); } function drawScore() { ctx.fillStyle = '#000'; ctx.font = '30px Arial'; ctx.fillText(Score: ${score}, 20, 40); } function gameLoop() { ctx.clearRect(0, 0, canvas.width, canvas.height); drawBackground(); drawPipes(); drawBird(); drawScore(); update(); requestAnimationFrame(gameLoop); } // Start the game loop immediately gameLoop(); // Controls to start / jump window.addEventListener("keydown", e => { if (e.code === "Space") { if (!gameRunning) { restartGame(); } bird.velocity = jump; sounds.jump.currentTime = 0; sounds.jump.play(); } }); window.addEventListener("click", () => { if (!gameRunning) { restartGame(); } bird.velocity = jump; sounds.jump.currentTime = 0; sounds.jump.play(); }); // Enable background music after first user interaction (due to browser policies) function enableAudio() { sounds.bg.play().catch(() => {}); window.removeEventListener("click", enableAudio); window.removeEventListener("keydown", enableAudio); } window.addEventListener("click", enableAudio); window.addEventListener("keydown", enableAudio); </script> </body> <script type="text/javascript"> atOptions = { 'key' : 'c91750109f3bb52677ddd12609310aa2', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} }; </script> </html>enableAudio); } window.addEventListener("click", enableAudio); window.addEventListener("keydown", enableAudio); </script> </body> <script type="text/javascript"> atOptions = { 'key' : 'c91750109f3bb52677ddd12609310aa2', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} }; </script> </html>enableAudio); } window.addEventListener("click", enableAudio); window.addEventListener("keydown", enableAudio); </script> </body> <script type="text/javascript"> atOptions = { 'key' : 'c91750109f3bb52677ddd12609310aa2', 'format' : 'iframe', 'height' : 90, 'width' : 728, 'params' : {} }; </script> </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flappy Bird - Enhanced HD Version</title>
+  <style>
+    /* Add minimal styles to make game functional (expand as needed) */
+    canvas { display: block; margin: auto; background: #70C5FF; }
+    .hidden { display: none; }
+    .game-container, .game-box, #score-display, #hi-score-display {
+      position: absolute; text-align: center; z-index: 10;
+    }
+    .control-btn, .action-btn {
+      font-size: 1.2em; margin: 5px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Game Buttons -->
+  <button id="pause-btn" class="control-btn" style="display:none;">⏸</button>
+  <button id="mute-btn" class="control-btn" style="display:none;">🔊</button>
+
+  <!-- Game Canvas -->
+  <canvas id="game-canvas"></canvas>
+
+  <!-- UI Elements -->
+  <div id="splash-container" class="game-container">
+    <div class="game-box">
+      <h1>Flappy Bird</h1>
+      <p id="splash-text">Click to flap</p>
+      <p>Press SPACE to flap</p>
+      <button id="start-btn" class="action-btn">Start Game</button>
+    </div>
+  </div>
+
+  <div id="game-over-container" class="game-container hidden">
+    <div class="game-box">
+      <h2>GAME OVER</h2>
+      <p>Score: <span id="final-score">0</span></p>
+      <p>Best: <span id="best-score">0</span></p>
+      <button id="restart-btn" class="action-btn">Play Again</button>
+      <button id="menu-btn" class="action-btn">Main Menu</button>
+    </div>
+  </div>
+
+  <div id="pause-container" class="game-container hidden">
+    <div class="game-box pause-box">
+      <h2>PAUSED</h2>
+      <button id="resume-btn" class="action-btn">▶ Resume</button>
+      <button id="restart-pause-btn" class="action-btn">↻ Restart</button>
+      <button id="quit-btn" class="action-btn">✕ Quit</button>
+    </div>
+  </div>
+
+  <!-- Score UI -->
+  <div id="score-display" style="display:none;">0</div>
+  <div id="hi-score-display" style="display:none;">HI: 0</div>
+
+  <!-- Audio Elements -->
+  <audio id="flap-sound" src="data:audio/wav;base64,..." preload="auto"></audio>
+  <audio id="score-sound" src="data:audio/wav;base64,..." preload="auto"></audio>
+  <audio id="hit-sound" src="data:audio/wav;base64,..." preload="auto"></audio>
+
+  <!-- Embedded JavaScript -->
+  <script>
+    // Your JavaScript code starts here
+    const GRAVITY = 0.5;
+    const FLAP_STRENGTH = -8;
+    const PIPE_SPEED = 3;
+    const PIPE_SPAWN_INTERVAL = 1500;
+    const GROUND_HEIGHT = 112;
+    const GAP_SIZE = 150;
+
+    let canvas, ctx;
+    let bird = {};
+    let pipes = [], ground = [], clouds = [];
+    let score = 0, hiScore = 0;
+    let gameState = 'splash';
+    let lastTime = 0, pipeSpawnTimer = 0;
+    let muted = false, frameId = null;
+
+    const scoreDisplay = document.getElementById('score-display');
+    const hiScoreDisplay = document.getElementById('hi-score-display');
+    const finalScoreDisplay = document.getElementById('final-score');
+    const bestScoreDisplay = document.getElementById('best-score');
+    const splashContainer = document.getElementById('splash-container');
+    const gameOverContainer = document.getElementById('game-over-container');
+    const pauseContainer = document.getElementById('pause-container');
+    const pauseBtn = document.getElementById('pause-btn');
+    const muteBtn = document.getElementById('mute-btn');
+    const startBtn = document.getElementById('start-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const menuBtn = document.getElementById('menu-btn');
+    const resumeBtn = document.getElementById('resume-btn');
+    const restartPauseBtn = document.getElementById('restart-pause-btn');
+    const quitBtn = document.getElementById('quit-btn');
+
+    const flapSound = document.getElementById('flap-sound');
+    const scoreSound = document.getElementById('score-sound');
+    const hitSound = document.getElementById('hit-sound');
+
+    // ...Insert full JS logic here exactly as in your message...
+    // Call init() once DOM is ready
+    window.onload = init;
+  </script>
+</body>
+</html>
